@@ -4,14 +4,9 @@
          xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
          version="4.0">
 
-    <servlet>
-        <servlet-name>GiocatoriServlet</servlet-name>
-        <servlet-class>it.zerob.learn.servlet.GiocatoriServlet</servlet-class>
-    </servlet>
+    <!-- Le servlet sono configurate tramite annotazioni @WebServlet -->
+    <!-- GiocatoriServlet -> /listaGiocatori -->
+    <!-- SalvaGiocatoreServlet -> /salvaGiocatore -->
 
-    <servlet-mapping>
-        <servlet-name>GiocatoriServlet</servlet-name>
-        <url-pattern>/giocatori.html</url-pattern>
-    </servlet-mapping>
 
 </web-app>
