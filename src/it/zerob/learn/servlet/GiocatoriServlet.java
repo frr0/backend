@@ -11,7 +11,7 @@ import java.sql.*;
 
 import oracle.jdbc.driver.OracleDriver;
 
-@WebServlet(name = "GiocatoriServlet", urlPatterns = {"/listaGiocatori"})
+@WebServlet("/secure/giocatori.html")
 public class GiocatoriServlet extends HttpServlet {
 
     @Override
@@ -37,7 +37,7 @@ public class GiocatoriServlet extends HttpServlet {
         wr.println("<title>ZeroBSport - Giocatori</title>");
 
         // Source di stile e icone
-        wr.println("<link rel=\"stylesheet\" href=\"css/stile.css\" />");
+        wr.println("<link rel=\"stylesheet\" href=\"../css/stile.css\" />");
         wr.println("<link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css\" />");
 
         // Script JS nell'head
@@ -64,6 +64,7 @@ public class GiocatoriServlet extends HttpServlet {
         wr.println("<img id=\"logo\" src=\"pallone.png\">");
         wr.println("<h1>ZeroBSport</h1>");
         wr.println("<p>Analytic Sports Data - Back Office</p>");
+        wr.println("<a href=\"" + request.getContextPath() + "/logout\">Logout</a>");
         wr.println("</div>");
 
         wr.println("<div class=\"wrapper\">");
@@ -197,7 +198,7 @@ public class GiocatoriServlet extends HttpServlet {
         wr.println("<div id=\"bottom\">ZeroBSport - Copyright © 2018 ZeroB s.r.l. - All Rights Reserved</div>");
         wr.println("</div>"); // Chiude wrapper esterno
 
-        wr.println("<script type=\"text/javascript\" src=\"js/giocatori.js\"></script>");
+        wr.println("<script type=\"text/javascript\" src=\"../js/giocatori.js\"></script>");
         wr.println("</body>");
         wr.println("</html>");
     }

@@ -4,9 +4,6 @@
          xsi:schemaLocation="http://xmlns.jcp.org/xml/ns/javaee http://xmlns.jcp.org/xml/ns/javaee/web-app_4_0.xsd"
          version="4.0">
 
-    <!-- Le servlet sono configurate tramite annotazioni @WebServlet -->
-    <!-- GiocatoriServlet -> /listaGiocatori -->
-    <!-- SalvaGiocatoreServlet -> /salvaGiocatore -->
-
+    <!-- All servlets and filters are configured using @WebServlet and @WebFilter annotations -->
 
 </web-app>

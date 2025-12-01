@@ -27,6 +27,8 @@ public class SalvaGiocatoreServlet extends HttpServlet {
         String operazione = request.getParameter("operation");
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Connection connessione = null;
+        boolean isErrore = false;
+        String errorMessage = "";
 
         try {
             connessione = DriverManager.getConnection("jdbc:oracle:thin:@franellucci-zb:1521:XE", "ZEROBSPORTS", "zrbpwdzerobsports");
@@ -36,12 +38,12 @@ public class SalvaGiocatoreServlet extends HttpServlet {
                 Integer idRec;
                 String nome = request.getParameter("NOME");
                 String cognome = request.getParameter("COGNOME");
-                String dataNascita = request.getParameter("DATA_NASCITA");
+                String dataNascita = request.getParameter("DATA_DI_NASCITA");
                 String alias = request.getParameter("ALIAS");
-                String numeroMaglia = request.getParameter("NUMERO_MAGLIA");
+                String numeroMaglia = request.getParameter("NUMERO_MAGLIA_ABITUALE");
                 String nazioneDiNascita = request.getParameter("NAZIONE_NASCITA");
                 String cittaDiNascita = request.getParameter("CITTA_NASCITA");
-                // Ruolo rimosso completamente
+                String ruoloAbituale = request.getParameter("RUOLO_ABITUALE");
 
                 System.out.println("DEBUG: Parametri ricevuti - Nome: " + nome + ", Cognome: " + cognome + ", Nazione: " + nazioneDiNascita);
 
@@ -64,50 +66,68 @@ public class SalvaGiocatoreServlet extends HttpServlet {
                 }
 
                 if (request.getParameter("ID_REC") == null || "".equalsIgnoreCase(request.getParameter("ID_REC"))) {
-                    // INSERT (SENZA RUOLO)
-                    System.out.println("DEBUG: Esecuzione INSERT per nuovo giocatore");
+                    // INSERT
+                    PreparedStatement insertPersonaStmt = connessione.prepareStatement("INSERT INTO ZS_PERSONE(ID_REC, NOME, COGNOME, DATA_DI_NASCITA, ID_NAZIONE_NASCITA_FK, ID_CITTA_NASCITA_FK) VALUES (SEQ_ZEROBSPORTS.NEXTVAL, ?, ?, ?, (SELECT ID_REC FROM ZS_NAZIONI WHERE LOWER(NOME) = LOWER(?)), (SELECT ID_REC FROM ZS_CITTA WHERE LOWER(NOME) = LOWER(?)))");
+                    insertPersonaStmt.setString(1, nome);
+                    insertPersonaStmt.setString(2, cognome);
+                    insertPersonaStmt.setDate(3, new java.sql.Date(sdf.parse(dataNascita).getTime()));
+                    insertPersonaStmt.setString(4, nazioneDiNascita.toLowerCase());
+                    insertPersonaStmt.setString(5, cittaDiNascita.toLowerCase());
 
-                    String insertGiocatore = "INSERT INTO GIOCATORI (NOME, COGNOME, DATA_DI_NASCITA, ALIAS, NUMERO_MAGLIA_ABITUALE, ID_NAZIONE_NASCITA_FK, ID_CITTA_NASCITA_FK) " +
-                            "VALUES (?, ?, ?, ?, ?, (SELECT ID_REC FROM NAZIONI WHERE LOWER(NOME) = LOWER(?)), (SELECT ID_REC FROM ZS_CITTA WHERE LOWER(NOME) = LOWER(?)))";
+                    int results = insertPersonaStmt.executeUpdate();
 
-                    System.out.println("DEBUG: Query INSERT: " + insertGiocatore);
+                    if (results == 1) {
+                        // 1. Recupero dell'ID generato (curval)
+                        Statement getCurrVal = connessione.prepareStatement("SELECT SEQ_ZEROBSPORTS.currval FROM DUAL");
+                        ResultSet rsGetCurrVal = ((PreparedStatement) getCurrVal).executeQuery();
 
-                    PreparedStatement queryInsert = connessione.prepareStatement(insertGiocatore);
-                    queryInsert.setString(1, nome);
-                    queryInsert.setString(2, cognome);
-                    queryInsert.setDate(3, new Date(sdf.parse(dataNascita).getTime()));
-                    queryInsert.setString(4, alias);
-                    if (numeroMaglia != null && !numeroMaglia.isEmpty()) {
-                        queryInsert.setInt(5, Integer.parseInt(numeroMaglia));
-                        System.out.println("DEBUG: Numero maglia: " + numeroMaglia);
-                    } else {
-                        queryInsert.setNull(5, Types.INTEGER);
-                        System.out.println("DEBUG: Numero maglia: NULL");
+                        Integer idPersonaFK = null;
+                        if (rsGetCurrVal.next()) {
+                            idPersonaFK = rsGetCurrVal.getInt(1);
+                        }
+                        getCurrVal.close();
+
+                        // 2. Preparazione dell'inserimento in ZS_GIOCATORI
+                        PreparedStatement insertGiocatoreStmt = connessione.prepareStatement("INSERT INTO ZS_GIOCATORI (ID_REC, ID_PERSONA_FK, ALIAS, ID_RUOLO_ABITUALE_FK, NUMERO_MAGLIA_ABITUALE) " +
+                                "VALUES (SEQ_ZEROBSPORTS.nextval, ?, ?, ?, ?)");
+
+                        insertGiocatoreStmt.setInt(1, idPersonaFK);
+                        insertGiocatoreStmt.setString(2, alias);
+                        insertGiocatoreStmt.setInt(3, Integer.parseInt(ruoloAbituale));
+                        insertGiocatoreStmt.setInt(4, Integer.parseInt(numeroMaglia));
+
+                        results = insertGiocatoreStmt.executeUpdate();
+
+                        // 3. Gestione della transazione
+                        if (results == 1) {
+                            connessione.commit();
+                            insertGiocatoreStmt.close();
+                            insertPersonaStmt.close();
+                        } else {
+                            isErrore = true;
+                            errorMessage = "Errore durante l'inserimento del giocatore";
+                            connessione.rollback();
+                            insertGiocatoreStmt.close();
+                            insertPersonaStmt.close();
+                        }
+                    } else { // if (results == 1) fallisce per insertPersonaStmt
+                        isErrore = true;
+                        errorMessage = "Errore durante l'inserimento del giocatore";
+                        connessione.rollback();
                     }
-                    queryInsert.setString(6, nazioneDiNascita);
-                    queryInsert.setString(7, cittaDiNascita);
-
-                    System.out.println("DEBUG: Esecuzione executeUpdate...");
-                    int rowsInserted = queryInsert.executeUpdate();
-                    System.out.println("DEBUG: Righe inserite: " + rowsInserted);
-
-                    System.out.println("DEBUG: Esecuzione commit...");
-                    connessione.commit();
-                    System.out.println("DEBUG: COMMIT COMPLETATO CON SUCCESSO!");
-
-                    queryInsert.close();
                 }else{
-                    // UPDATE (senza ruolo)
+                    // UPDATE
                     idRec = Integer.parseInt(request.getParameter("ID_REC"));
                     System.out.println("DEBUG: Aggiornamento giocatore ID: " + idRec);
                     String updateGiocatore = "UPDATE GIOCATORI SET NOME = ?, COGNOME = ?, DATA_DI_NASCITA = ?, ALIAS = ?, NUMERO_MAGLIA_ABITUALE = ?, " +
                             "ID_NAZIONE_NASCITA_FK = (SELECT ID_REC FROM NAZIONI WHERE LOWER(NOME) = LOWER(?)), " +
-                            "ID_CITTA_NASCITA_FK = (SELECT ID_REC FROM ZS_CITTA WHERE LOWER(NOME) = LOWER(?)) " +
+                            "ID_CITTA_NASCITA_FK = (SELECT ID_REC FROM ZS_CITTA WHERE LOWER(NOME) = LOWER(?)), " +
+                            "RUOLO_ABITUALE = ? " +
                             "WHERE ID_REC = ?";
                     PreparedStatement queryUpdate = connessione.prepareStatement(updateGiocatore);
                     queryUpdate.setString(1, nome);
                     queryUpdate.setString(2, cognome);
-                    queryUpdate.setDate(3, new Date(sdf.parse(dataNascita).getTime()));
+                    queryUpdate.setDate(3, new java.sql.Date(sdf.parse(dataNascita).getTime()));
                     queryUpdate.setString(4, alias);
                     if (numeroMaglia != null && !numeroMaglia.isEmpty()) {
                         queryUpdate.setInt(5, Integer.parseInt(numeroMaglia));
@@ -116,7 +136,8 @@ public class SalvaGiocatoreServlet extends HttpServlet {
                     }
                     queryUpdate.setString(6, nazioneDiNascita);
                     queryUpdate.setString(7, cittaDiNascita);
-                    queryUpdate.setInt(8, idRec);
+                    queryUpdate.setString(8, ruoloAbituale);
+                    queryUpdate.setInt(9, idRec);
 
                     queryUpdate.executeUpdate();
                     connessione.commit();
@@ -129,14 +150,16 @@ public class SalvaGiocatoreServlet extends HttpServlet {
             }
             connessione.close();
 
+            if (isErrore) {
+                throw new ServletException(errorMessage);
+            }
+
             // Reindirizza alla pagina giocatori dopo il salvataggio
-            // Se usi giocatori.html (statico), reindirizza lì
-            // Se usi listaGiocatori (servlet), reindirizza lì
             String referer = request.getHeader("Referer");
             if (referer != null && referer.contains("listaGiocatori")) {
                 response.sendRedirect("listaGiocatori");
             } else {
-                response.sendRedirect("giocatori.html");
+                response.sendRedirect("giocatori.jsp");
             }
 
         } catch (SQLException e) {
