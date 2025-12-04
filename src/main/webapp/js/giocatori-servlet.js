@@ -86,8 +86,8 @@ function handleRowClick(event) {
         form.COGNOME.value = data.COGNOME || "";
     }
 
-    // DATA_NASCITA - Converti da DD-MM-YYYY a YYYY-MM-DD
-    if (form.DATA_NASCITA && data.DATA_DI_NASCITA) {
+    // DATA_DI_NASCITA - Converti da DD-MM-YYYY a YYYY-MM-DD
+    if (form.DATA_DI_NASCITA && data.DATA_DI_NASCITA) {
         var dataParts = data.DATA_DI_NASCITA.split("-");
         if (dataParts.length === 3) {
             var day = dataParts[0];
@@ -97,7 +97,7 @@ function handleRowClick(event) {
             if (year.length === 2) {
                 year = (parseInt(year) < 30 ? "20" : "19") + year;
             }
-            form.DATA_NASCITA.value = year + "-" + month + "-" + day;
+            form.DATA_DI_NASCITA.value = year + "-" + month + "-" + day;
         }
     }
 
@@ -106,15 +106,15 @@ function handleRowClick(event) {
         form.ALIAS.value = data.ALIAS || "";
     }
 
-    // NUMERO_MAGLIA
-    if (form.NUMERO_MAGLIA) {
-        var numMaglia = data.numero_maglia_abituale || "";
+    // NUMERO_MAGLIA_ABITUALE
+    if (form.NUMERO_MAGLIA_ABITUALE) {
+        var numMaglia = data.NUMERO_MAGLIA_ABITUALE || "";
         // Rimuovi spazi e controlla se è un numero
         numMaglia = numMaglia.trim();
         if (numMaglia && !isNaN(numMaglia)) {
-            form.NUMERO_MAGLIA.value = numMaglia;
+            form.NUMERO_MAGLIA_ABITUALE.value = numMaglia;
         } else {
-            form.NUMERO_MAGLIA.value = "";
+            form.NUMERO_MAGLIA_ABITUALE.value = "";
         }
     }
 
@@ -149,6 +149,8 @@ function validateFormGiocatori(event) {
     var isValid = true;
     var errors = [];
 
+    console.log("DEBUG: Validazione form in corso...", form);
+
     // Valida Nome
     if (!form.NOME.value || form.NOME.value.trim() === "") {
         errors.push("Il campo Nome è obbligatorio");
@@ -162,7 +164,7 @@ function validateFormGiocatori(event) {
     }
 
     // Valida Data Nascita
-    if (!form.DATA_NASCITA.value || form.DATA_NASCITA.value.trim() === "") {
+    if (!form.DATA_DI_NASCITA.value || form.DATA_DI_NASCITA.value.trim() === "") {
         errors.push("Il campo Data Nascita è obbligatorio");
         isValid = false;
     }
@@ -174,8 +176,8 @@ function validateFormGiocatori(event) {
     }
 
     // Valida Numero Maglia (se presente)
-    if (form.NUMERO_MAGLIA.value && form.NUMERO_MAGLIA.value !== "") {
-        var numeroMaglia = parseInt(form.NUMERO_MAGLIA.value);
+    if (form.NUMERO_MAGLIA_ABITUALE.value && form.NUMERO_MAGLIA_ABITUALE.value !== "") {
+        var numeroMaglia = parseInt(form.NUMERO_MAGLIA_ABITUALE.value);
         if (isNaN(numeroMaglia) || numeroMaglia < 1 || numeroMaglia > 99) {
             errors.push("Il Numero Maglia deve essere tra 1 e 99");
             isValid = false;
@@ -184,7 +186,10 @@ function validateFormGiocatori(event) {
 
     if (!isValid) {
         event.preventDefault(); // Blocca il submit solo se ci sono errori
+        console.error("DEBUG: Errori di validazione:", errors);
         alert("Errori di validazione:\n" + errors.join("\n"));
+    } else {
+        console.log("DEBUG: Validazione completata con successo. Submitting form to: ", form.action);
     }
 
     return isValid;

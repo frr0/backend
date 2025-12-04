@@ -27,15 +27,13 @@ public class SalvaGiocatoreServlet extends HttpServlet {
         String operazione = request.getParameter("operation");
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
         Connection connessione = null;
-        boolean isErrore = false;
-        String errorMessage = "";
 
         try {
             connessione = DriverManager.getConnection("jdbc:oracle:thin:@franellucci-zb:1521:XE", "ZEROBSPORTS", "zrbpwdzerobsports");
             connessione.setAutoCommit(false);
+
             if("insertOrUpdate".equalsIgnoreCase(operazione)){
-                // insert o update
-                Integer idRec;
+                // Estrai parametri
                 String nome = request.getParameter("NOME");
                 String cognome = request.getParameter("COGNOME");
                 String dataNascita = request.getParameter("DATA_DI_NASCITA");
@@ -43,124 +41,92 @@ public class SalvaGiocatoreServlet extends HttpServlet {
                 String numeroMaglia = request.getParameter("NUMERO_MAGLIA_ABITUALE");
                 String nazioneDiNascita = request.getParameter("NAZIONE_NASCITA");
                 String cittaDiNascita = request.getParameter("CITTA_NASCITA");
-                String ruoloAbituale = request.getParameter("RUOLO_ABITUALE");
+                String idRecParam = request.getParameter("ID_REC");
 
-                System.out.println("DEBUG: Parametri ricevuti - Nome: " + nome + ", Cognome: " + cognome + ", Nazione: " + nazioneDiNascita);
+                System.out.println("DEBUG: Parametri ricevuti - Nome: " + nome + ", Cognome: " + cognome + ", Data: " + dataNascita);
 
                 // Validazione campi obbligatori
                 if (nome == null || nome.trim().isEmpty()) {
-                    response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Il campo Nome è obbligatorio");
-                    return;
+                    throw new RuntimeException("Il campo Nome è obbligatorio");
                 }
                 if (cognome == null || cognome.trim().isEmpty()) {
-                    response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Il campo Cognome è obbligatorio");
-                    return;
+                    throw new RuntimeException("Il campo Cognome è obbligatorio");
                 }
                 if (dataNascita == null || dataNascita.trim().isEmpty()) {
-                    response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Il campo Data Nascita è obbligatorio");
-                    return;
+                    throw new RuntimeException("Il campo Data Nascita è obbligatorio");
                 }
                 if (nazioneDiNascita == null || nazioneDiNascita.trim().isEmpty()) {
-                    response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Il campo Nazione Nascita è obbligatorio");
-                    return;
+                    throw new RuntimeException("Il campo Nazione Nascita è obbligatorio");
                 }
 
-                if (request.getParameter("ID_REC") == null || "".equalsIgnoreCase(request.getParameter("ID_REC"))) {
+                if (idRecParam == null || idRecParam.trim().isEmpty()) {
                     // INSERT
-                    PreparedStatement insertPersonaStmt = connessione.prepareStatement("INSERT INTO ZS_PERSONE(ID_REC, NOME, COGNOME, DATA_DI_NASCITA, ID_NAZIONE_NASCITA_FK, ID_CITTA_NASCITA_FK) VALUES (SEQ_ZEROBSPORTS.NEXTVAL, ?, ?, ?, (SELECT ID_REC FROM ZS_NAZIONI WHERE LOWER(NOME) = LOWER(?)), (SELECT ID_REC FROM ZS_CITTA WHERE LOWER(NOME) = LOWER(?)))");
-                    insertPersonaStmt.setString(1, nome);
-                    insertPersonaStmt.setString(2, cognome);
-                    insertPersonaStmt.setDate(3, new java.sql.Date(sdf.parse(dataNascita).getTime()));
-                    insertPersonaStmt.setString(4, nazioneDiNascita.toLowerCase());
-                    insertPersonaStmt.setString(5, cittaDiNascita.toLowerCase());
+                    String insertGiocatore = "INSERT INTO VIEW_GIOCATORI (NOME, COGNOME, DATA_NASCITA, ALIAS, NUMERO_MAGLIA_ABITUALE, NAZIONE_NASCITA, CITTA_NASCITA) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                    PreparedStatement pstmt = connessione.prepareStatement(insertGiocatore);
+                    pstmt.setString(1, nome);
+                    pstmt.setString(2, cognome);
+                    pstmt.setDate(3, new java.sql.Date(sdf.parse(dataNascita).getTime()));
+                    pstmt.setString(4, alias != null ? alias : "");
+                    if (numeroMaglia != null && !numeroMaglia.trim().isEmpty()) {
+                        pstmt.setInt(5, Integer.parseInt(numeroMaglia));
+                    } else {
+                        pstmt.setNull(5, Types.INTEGER);
+                    }
+                    pstmt.setString(6, nazioneDiNascita);
+                    pstmt.setString(7, cittaDiNascita != null ? cittaDiNascita : "");
 
-                    int results = insertPersonaStmt.executeUpdate();
+                    int results = pstmt.executeUpdate();
+                    pstmt.close();
 
                     if (results == 1) {
-                        // 1. Recupero dell'ID generato (curval)
-                        Statement getCurrVal = connessione.prepareStatement("SELECT SEQ_ZEROBSPORTS.currval FROM DUAL");
-                        ResultSet rsGetCurrVal = ((PreparedStatement) getCurrVal).executeQuery();
-
-                        Integer idPersonaFK = null;
-                        if (rsGetCurrVal.next()) {
-                            idPersonaFK = rsGetCurrVal.getInt(1);
-                        }
-                        getCurrVal.close();
-
-                        // 2. Preparazione dell'inserimento in ZS_GIOCATORI
-                        PreparedStatement insertGiocatoreStmt = connessione.prepareStatement("INSERT INTO ZS_GIOCATORI (ID_REC, ID_PERSONA_FK, ALIAS, ID_RUOLO_ABITUALE_FK, NUMERO_MAGLIA_ABITUALE) " +
-                                "VALUES (SEQ_ZEROBSPORTS.nextval, ?, ?, ?, ?)");
-
-                        insertGiocatoreStmt.setInt(1, idPersonaFK);
-                        insertGiocatoreStmt.setString(2, alias);
-                        insertGiocatoreStmt.setInt(3, Integer.parseInt(ruoloAbituale));
-                        insertGiocatoreStmt.setInt(4, Integer.parseInt(numeroMaglia));
-
-                        results = insertGiocatoreStmt.executeUpdate();
-
-                        // 3. Gestione della transazione
-                        if (results == 1) {
-                            connessione.commit();
-                            insertGiocatoreStmt.close();
-                            insertPersonaStmt.close();
-                        } else {
-                            isErrore = true;
-                            errorMessage = "Errore durante l'inserimento del giocatore";
-                            connessione.rollback();
-                            insertGiocatoreStmt.close();
-                            insertPersonaStmt.close();
-                        }
-                    } else { // if (results == 1) fallisce per insertPersonaStmt
-                        isErrore = true;
-                        errorMessage = "Errore durante l'inserimento del giocatore";
-                        connessione.rollback();
-                    }
-                }else{
-                    // UPDATE
-                    idRec = Integer.parseInt(request.getParameter("ID_REC"));
-                    System.out.println("DEBUG: Aggiornamento giocatore ID: " + idRec);
-                    String updateGiocatore = "UPDATE GIOCATORI SET NOME = ?, COGNOME = ?, DATA_DI_NASCITA = ?, ALIAS = ?, NUMERO_MAGLIA_ABITUALE = ?, " +
-                            "ID_NAZIONE_NASCITA_FK = (SELECT ID_REC FROM NAZIONI WHERE LOWER(NOME) = LOWER(?)), " +
-                            "ID_CITTA_NASCITA_FK = (SELECT ID_REC FROM ZS_CITTA WHERE LOWER(NOME) = LOWER(?)), " +
-                            "RUOLO_ABITUALE = ? " +
-                            "WHERE ID_REC = ?";
-                    PreparedStatement queryUpdate = connessione.prepareStatement(updateGiocatore);
-                    queryUpdate.setString(1, nome);
-                    queryUpdate.setString(2, cognome);
-                    queryUpdate.setDate(3, new java.sql.Date(sdf.parse(dataNascita).getTime()));
-                    queryUpdate.setString(4, alias);
-                    if (numeroMaglia != null && !numeroMaglia.isEmpty()) {
-                        queryUpdate.setInt(5, Integer.parseInt(numeroMaglia));
+                        connessione.commit();
+                        System.out.println("DEBUG: INSERT completato con successo");
                     } else {
-                        queryUpdate.setNull(5, Types.INTEGER);
+                        connessione.rollback();
+                        throw new RuntimeException("Errore durante l'inserimento del giocatore");
                     }
-                    queryUpdate.setString(6, nazioneDiNascita);
-                    queryUpdate.setString(7, cittaDiNascita);
-                    queryUpdate.setString(8, ruoloAbituale);
-                    queryUpdate.setInt(9, idRec);
+                } else {
+                    // UPDATE
+                    Integer idRec = Integer.parseInt(idRecParam);
+                    System.out.println("DEBUG: Aggiornamento giocatore ID: " + idRec);
 
-                    queryUpdate.executeUpdate();
-                    connessione.commit();
-                    queryUpdate.close();
-                    System.out.println("DEBUG: UPDATE completato e committato con successo");
+                    String updateGiocatore = "UPDATE VIEW_GIOCATORI SET NOME = ?, COGNOME = ?, DATA_NASCITA = ?, ALIAS = ?, " +
+                            "NUMERO_MAGLIA_ABITUALE = ?, NAZIONE_NASCITA = ?, CITTA_NASCITA = ? WHERE ID_REC = ?";
+                    PreparedStatement pstmt = connessione.prepareStatement(updateGiocatore);
+                    pstmt.setString(1, nome);
+                    pstmt.setString(2, cognome);
+                    pstmt.setDate(3, new java.sql.Date(sdf.parse(dataNascita).getTime()));
+                    pstmt.setString(4, alias != null ? alias : "");
+                    if (numeroMaglia != null && !numeroMaglia.trim().isEmpty()) {
+                        pstmt.setInt(5, Integer.parseInt(numeroMaglia));
+                    } else {
+                        pstmt.setNull(5, Types.INTEGER);
+                    }
+                    pstmt.setString(6, nazioneDiNascita);
+                    pstmt.setString(7, cittaDiNascita != null ? cittaDiNascita : "");
+                    pstmt.setInt(8, idRec);
+
+                    int results = pstmt.executeUpdate();
+                    pstmt.close();
+
+                    if (results >= 0) {
+                        connessione.commit();
+                        System.out.println("DEBUG: UPDATE completato con successo");
+                    } else {
+                        connessione.rollback();
+                        throw new RuntimeException("Errore durante l'aggiornamento del giocatore");
+                    }
                 }
-            }else{
+            } else {
                 //delete
                 // TODO: implementare delete
             }
+
             connessione.close();
 
-            if (isErrore) {
-                throw new ServletException(errorMessage);
-            }
-
             // Reindirizza alla pagina giocatori dopo il salvataggio
-            String referer = request.getHeader("Referer");
-            if (referer != null && referer.contains("listaGiocatori")) {
-                response.sendRedirect("listaGiocatori");
-            } else {
-                response.sendRedirect("giocatori.jsp");
-            }
+            response.sendRedirect(request.getContextPath() + "/listaGiocatori");
 
         } catch (SQLException e) {
             System.err.println("ERRORE SQL: " + e.getMessage());
@@ -175,16 +141,24 @@ public class SalvaGiocatoreServlet extends HttpServlet {
             }
 
             // Gestione errore più user-friendly
-            if (e.getMessage().contains("GIOCATORE_NAZIONE_FK")) {
+            if (e.getMessage().contains("nazione")) {
                 throw new RuntimeException("Errore: La nazione '" + request.getParameter("NAZIONE_NASCITA") + "' non esiste nel database.", e);
-            } else if (e.getMessage().contains("GIOCATORE_CITTA_FK")) {
+            } else if (e.getMessage().contains("citta")) {
                 throw new RuntimeException("Errore: La città '" + request.getParameter("CITTA_NASCITA") + "' non esiste nel database.", e);
             } else {
-                throw new RuntimeException("Errore durante il salvataggio: " + e.getMessage(), e);
+                throw new RuntimeException("Errore SQL durante il salvataggio: " + e.getMessage(), e);
             }
         } catch (ParseException e) {
             System.err.println("ERRORE PARSING DATA: " + e.getMessage());
             throw new RuntimeException("Errore: formato data non valido. Usa il formato YYYY-MM-DD", e);
+        } finally {
+            if (connessione != null) {
+                try {
+                    connessione.close();
+                } catch (SQLException e) {
+                    System.err.println("Errore chiusura connessione: " + e.getMessage());
+                }
+            }
         }
 
     }
