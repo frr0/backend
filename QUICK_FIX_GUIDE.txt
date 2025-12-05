@@ -1,0 +1,69 @@
+=============================================================================
+   MAVEN DEPENDENCY ERROR - QUICK FIX GUIDE
+=============================================================================
+
+STEP 1: Configure Java
+-----------------------
+File > Project Structure (Ctrl+Alt+Shift+S)
+├── Project Settings
+│   └── Project
+│       ├── SDK: Set to Java 11 or higher
+│       └── Language level: 11
+└── Click Apply & OK
+
+STEP 2: Reload Maven
+--------------------
+View > Tool Windows > Maven (or click Maven tab on right side)
+├── Find the Reload button 🔄 at top left
+├── Click it
+└── Wait for "BUILD SUCCESS" message
+
+STEP 3: Verify
+--------------
+✓ pom.xml - no red underlines
+✓ GiocatoriRestServlet.java - imports work
+✓ Project compiles
+
+=============================================================================
+
+IF STEP 2 FAILS:
+---------------
+A) Check Internet Connection
+   Maven needs to download from: https://repo.maven.apache.org/maven2
+
+B) Configure Maven JRE
+   File > Settings (Ctrl+Alt+S)
+   └── Build, Execution, Deployment
+       └── Build Tools
+           └── Maven
+               └── Runner
+                   └── JRE: Select Java 11+
+
+C) Try Bundled Maven
+   File > Settings (Ctrl+Alt+S)
+   └── Build, Execution, Deployment
+       └── Build Tools
+           └── Maven
+               └── Maven home path: "Bundled (Maven 3.x)"
+
+=============================================================================
+
+WHAT GETS DOWNLOADED:
+--------------------
+- gson-2.8.9.jar (~230 KB)
+- jackson-databind-2.13.4.jar (~1.5 MB)
+- jackson-core, jackson-annotations
+- ojdbc11-21.5.0.0.jar (~4 MB)
+- jakarta.servlet-api-6.0.0.jar
+- jakarta.servlet.jsp.jstl-2.0.0.jar
+- Other dependencies (~20 MB total)
+
+=============================================================================
+
+NEED JAVA?
+----------
+Download from: https://adoptium.net/
+Install Java 11, 17, or 21 (LTS versions)
+
+=============================================================================
+

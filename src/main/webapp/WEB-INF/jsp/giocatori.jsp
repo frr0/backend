@@ -10,6 +10,7 @@
         <div>
             <label for="searchFieldGiocatori">Cerca</label><input type="text" id="searchFieldGiocatori" />
             <input type="button" value="Cerca" class="btn" onclick="ricercaGiocatori()" />
+            <input type="button" value="Aggiorna" class="btn" onclick="caricaGiocatori()" />
         </div>
     </div>
     <table id="tableGiocatori">
@@ -61,6 +62,8 @@
         <input type="text" id="ALIAS" name="ALIAS" />
         <label FOR="NUMERO_MAGLIA_ABITUALE">N° Maglia:</label>
         <input type="number" id="NUMERO_MAGLIA_ABITUALE" name="NUMERO_MAGLIA_ABITUALE" step="1">
+        <label for="RUOLO_ABITUALE">Ruolo Abituale:</label>
+        <input type="text" id="RUOLO_ABITUALE" name="RUOLO_ABITUALE" />
         <label for="NAZIONE_NASCITA">Nazione Nascita:</label>
         <input type="text" id="NAZIONE_NASCITA" name="NAZIONE_NASCITA" />
         <label for="CITTA_NASCITA">Città Nascita:</label>

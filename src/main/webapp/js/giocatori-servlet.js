@@ -203,3 +203,96 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 
+// ========== CARICAMENTO DINAMICO GIOCATORI ==========
+// Funzione per aggiungere una riga alla tabella giocatori
+function aggiungiRigaTableGiocatori(giocatore) {
+    var tbody = document.getElementById("tableGiocatori").tBodies[0];
+    var tr = document.createElement("tr");
+
+    // Crea le celle in base agli header della tabella
+    var headers = document.getElementById("tableGiocatori").tHead.querySelectorAll("th");
+
+    for (var i = 0; i < headers.length; i++) {
+        var fieldName = headers[i].getAttribute("data-index");
+        var td = document.createElement("td");
+
+        if (fieldName && fieldName !== "") {
+            // Mappa i nomi dei campi dal JSON alla tabella
+            var value = "";
+            switch(fieldName) {
+                case "ID_REC":
+                    value = giocatore.idRec || giocatore.id_rec || giocatore.id || "";
+                    break;
+                case "NOME":
+                    value = giocatore.nome || "";
+                    break;
+                case "COGNOME":
+                    value = giocatore.cognome || "";
+                    break;
+                case "DATA_DI_NASCITA":
+                    value = giocatore.dataNascita || giocatore.data_di_nascita || "";
+                    break;
+                case "ALIAS":
+                    value = giocatore.alias || "";
+                    break;
+                case "NUMERO_MAGLIA_ABITUALE":
+                    value = giocatore.numeroMagliaAbituale || giocatore.numero_maglia_abituale || "";
+                    break;
+                case "RUOLO_ABITUALE":
+                    value = giocatore.ruoloAbituale || giocatore.ruolo_abituale || giocatore.ruolo || "";
+                    break;
+                case "NAZIONE_NASCITA":
+                    value = giocatore.nazioneNascita || giocatore.nazione_nascita || "";
+                    break;
+                case "CITTA_NASCITA":
+                    value = giocatore.cittaNascita || giocatore.citta_nascita || "";
+                    break;
+            }
+            td.innerHTML = value;
+        } else {
+            // Colonna per l'icona di eliminazione
+            var icon = document.createElement("a");
+            icon.style.fontSize = "16px";
+            icon.style.color = "black";
+            icon.className = "fa fa-trash";
+            td.appendChild(icon);
+        }
+        tr.appendChild(td);
+    }
+
+    // Inserisci la riga all'inizio del tbody
+    tbody.insertBefore(tr, tbody.firstChild);
+}
+
+// Funzione per caricare i giocatori dal server usando XMLHttpRequest (stile professore)
+function caricaGiocatori() {
+    var httpReq = new XMLHttpRequest();
+
+    httpReq.onreadystatechange = function () {
+        if (httpReq.readyState === 4) {
+            if (httpReq.status === 200) {
+                var listaGiocatori = JSON.parse(httpReq.responseText);
+
+                // Svuota la tabella prima di popolarla
+                var tbody = document.getElementById("tableGiocatori").tBodies[0];
+                tbody.innerHTML = "";
+
+                // Aggiungi i giocatori alla tabella (in ordine inverso come fa il professore)
+                for (var i = listaGiocatori.length; i > 0; i--) {
+                    aggiungiRigaTableGiocatori(listaGiocatori[i - 1]);
+                }
+
+                console.log("DEBUG: Caricati " + listaGiocatori.length + " giocatori dall'API");
+            } else {
+                console.error(httpReq.responseText);
+                alert("Errore durante il caricamento");
+            }
+        }
+    }
+
+    httpReq.open("GET", "/backend/api/giocatori");
+    httpReq.send();
+}
+
+// Carica i giocatori all'avvio della pagina (opzionale - decommentare se necessario)
+// document.addEventListener("DOMContentLoaded", caricaGiocatori);

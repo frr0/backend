@@ -1,0 +1,108 @@
+================================================================================
+   ✅ JAVA IS INSTALLED - NOW FOLLOW THESE STEPS IN INTELLIJ IDEA
+================================================================================
+
+NOW DO THIS IN INTELLIJ IDEA:
+------------------------------
+
+STEP 1: Configure Project SDK (Important!)
+==========================================
+1. Press Ctrl+Alt+Shift+S (or File > Project Structure)
+
+2. In the left panel, click "Project"
+
+3. Under "Project SDK":
+   - Click the dropdown
+   - Select your newly installed Java (should show Java 11, 17, or 21)
+   - If you don't see it, click "Add SDK" > "JDK" and browse to:
+     C:\Program Files\Eclipse Adoptium\jdk-XX.X.X
+     (or wherever you installed Java)
+
+4. Set "Language level" to: "11 - Local variable syntax for lambda parameters"
+
+5. Click "Apply" then "OK"
+
+
+STEP 2: Reload Maven Project (This Downloads Dependencies!)
+============================================================
+1. Look at the RIGHT SIDE of IntelliJ window for "Maven" tab
+   - If you don't see it: View > Tool Windows > Maven
+
+2. In the Maven tool window, find these buttons at the top:
+   🔄 ↻ 📁 ⚙️
+
+3. Click the 🔄 "Reload All Maven Projects" button (first icon, circular arrows)
+
+4. WAIT for the process to complete:
+   - Watch the progress bar at the BOTTOM of IntelliJ
+   - It will say "Downloading..." or "Resolving dependencies..."
+   - This takes 2-5 minutes the first time
+   - You'll see "BUILD SUCCESS" when done
+
+5. You should see Maven downloading files like:
+   - Downloading from central: https://repo.maven.apache.org/maven2/...
+   - com/google/code/gson/gson/2.8.9/gson-2.8.9.jar
+   - com/fasterxml/jackson/core/jackson-databind/2.13.4/...
+   - etc.
+
+
+STEP 3: Verify Everything Works
+================================
+1. Check pom.xml:
+   ✅ No red underlines
+   ✅ No error messages
+
+2. Open: src/it/zerob/learn/servlet/GiocatoriRestServlet.java
+   ✅ Line 6: "import com.google.gson.Gson;" should NOT be red
+   ✅ No "Cannot resolve symbol 'google'" error
+
+3. Try building the project:
+   - Build > Build Project (or press Ctrl+F9)
+   ✅ Should complete without errors
+   ✅ Check "Build" tab at bottom - should show "BUILD COMPLETED SUCCESSFULLY"
+
+
+IF STEP 2 FAILS OR YOU SEE ERRORS:
+===================================
+
+Try this alternative:
+
+A. Right-click on pom.xml file in Project view
+B. Select "Maven" > "Reload project"
+C. Wait for completion
+
+OR
+
+A. File > Settings (Ctrl+Alt+S)
+B. Go to: Build, Execution, Deployment > Build Tools > Maven
+C. Click "Maven home path" dropdown
+D. Select "Bundled (Maven 3.x)"
+E. Click OK
+F. Try reloading Maven again (Step 2 above)
+
+
+TROUBLESHOOTING:
+================
+
+If you still see errors:
+□ Make sure you have internet connection
+□ Check if a firewall/proxy is blocking Maven
+□ Try: File > Invalidate Caches > Invalidate and Restart
+□ Check Event Log (bottom-right corner) for specific errors
+
+
+WHAT SHOULD HAPPEN:
+===================
+Maven will download approximately 20-30 MB of JAR files:
+✓ gson-2.8.9.jar
+✓ jackson-databind-2.13.4.jar + dependencies
+✓ ojdbc11-21.5.0.0.jar
+✓ jakarta.servlet-api-6.0.0.jar
+✓ jakarta.servlet.jsp.jstl-2.0.0.jar
+✓ junit-jupiter-api/engine-5.9.2.jar
+✓ All transitive dependencies
+
+Once complete, all import errors will be resolved! 🎉
+
+================================================================================
+

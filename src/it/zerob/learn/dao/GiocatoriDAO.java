@@ -64,7 +64,7 @@ public class GiocatoriDAO {
                             break;
                         case "NUMERO_MAGLIA_ABITUALE":
                             if (rs.getObject(i) != null) {
-                                giocatoreIterato.setNumeroMagliaAbituale(rs.getInt(i));
+                                giocatoreIterato.setNumeroMagliaAbituale(rs.getBigDecimal(i));
                             }
                             break;
                         case "RUOLO":
@@ -82,6 +82,96 @@ public class GiocatoriDAO {
             }
         }
         return giocatori;
+    }
+
+    public Giocatore insertGiocatore(Giocatore giocatore) throws SQLException {
+        String sql = "INSERT INTO VIEW_GIOCATORI (NOME, COGNOME, DATA_NASCITA, ALIAS, NUMERO_MAGLIA_ABITUALE, NAZIONE_NASCITA, CITTA_NASCITA, RUOLO) " +
+                     "VALUES (?, ?, TO_DATE(?, 'YYYY-MM-DD'), ?, ?, ?, ?, ?)";
+
+        System.out.println("DEBUG GiocatoriDAO: Inserimento nuovo giocatore...");
+
+        try {
+            DriverManager.registerDriver(new OracleDriver());
+        } catch (SQLException e) {
+            // Driver already registered, ignore
+        }
+
+        try (Connection connection = DriverManager.getConnection(CONNECTION_STRING, DB_USER, DB_PASSWORD);
+             PreparedStatement pstmt = connection.prepareStatement(sql, new String[]{"ID_REC"})) {
+
+            pstmt.setString(1, giocatore.getNome());
+            pstmt.setString(2, giocatore.getCognome());
+            pstmt.setString(3, giocatore.getDataNascita());
+            pstmt.setString(4, giocatore.getAlias());
+
+            if (giocatore.getNumeroMagliaAbituale() != null) {
+                pstmt.setBigDecimal(5, giocatore.getNumeroMagliaAbituale());
+            } else {
+                pstmt.setNull(5, java.sql.Types.NUMERIC);
+            }
+
+            pstmt.setString(6, giocatore.getNazioneNascita());
+            pstmt.setString(7, giocatore.getCittaNascita());
+            pstmt.setString(8, giocatore.getRuoloAbituale());
+
+            int rowsAffected = pstmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                // Get the generated ID
+                try (ResultSet rs = pstmt.getGeneratedKeys()) {
+                    if (rs.next()) {
+                        giocatore.setIdRec(rs.getInt(1));
+                    }
+                }
+                System.out.println("DEBUG GiocatoriDAO: Giocatore inserito con ID: " + giocatore.getIdRec());
+            }
+        }
+
+        return giocatore;
+    }
+
+    public Giocatore updateGiocatore(Giocatore giocatore) throws SQLException {
+        String sql = "UPDATE VIEW_GIOCATORI SET NOME = ?, COGNOME = ?, DATA_NASCITA = TO_DATE(?, 'YYYY-MM-DD'), " +
+                     "ALIAS = ?, NUMERO_MAGLIA_ABITUALE = ?, NAZIONE_NASCITA = ?, CITTA_NASCITA = ?, RUOLO = ? " +
+                     "WHERE ID_REC = ?";
+
+        System.out.println("DEBUG GiocatoriDAO: Aggiornamento giocatore ID: " + giocatore.getIdRec());
+
+        try {
+            DriverManager.registerDriver(new OracleDriver());
+        } catch (SQLException e) {
+            // Driver already registered, ignore
+        }
+
+        try (Connection connection = DriverManager.getConnection(CONNECTION_STRING, DB_USER, DB_PASSWORD);
+             PreparedStatement pstmt = connection.prepareStatement(sql)) {
+
+            pstmt.setString(1, giocatore.getNome());
+            pstmt.setString(2, giocatore.getCognome());
+            pstmt.setString(3, giocatore.getDataNascita());
+            pstmt.setString(4, giocatore.getAlias());
+
+            if (giocatore.getNumeroMagliaAbituale() != null) {
+                pstmt.setBigDecimal(5, giocatore.getNumeroMagliaAbituale());
+            } else {
+                pstmt.setNull(5, java.sql.Types.NUMERIC);
+            }
+
+            pstmt.setString(6, giocatore.getNazioneNascita());
+            pstmt.setString(7, giocatore.getCittaNascita());
+            pstmt.setString(8, giocatore.getRuoloAbituale());
+            pstmt.setInt(9, giocatore.getIdRec());
+
+            int rowsAffected = pstmt.executeUpdate();
+
+            if (rowsAffected > 0) {
+                System.out.println("DEBUG GiocatoriDAO: Giocatore aggiornato con successo");
+            } else {
+                throw new SQLException("Nessun giocatore trovato con ID: " + giocatore.getIdRec());
+            }
+        }
+
+        return giocatore;
     }
 
 }

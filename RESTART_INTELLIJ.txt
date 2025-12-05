@@ -1,0 +1,62 @@
+================================================================================
+  ⚠️ IMPORTANT: YOU NEED TO RESTART INTELLIJ IDEA NOW
+================================================================================
+
+Why? The Java installation you just did added environment variables, but
+IntelliJ IDEA was already running, so it doesn't see the new Java yet.
+
+WHAT TO DO NOW:
+===============
+
+1. CLOSE IntelliJ IDEA completely
+   - File > Exit (or click the X button)
+   - Make sure it's fully closed (check taskbar)
+
+2. RESTART IntelliJ IDEA
+   - Open it again
+   - It will reload your Backend project
+
+3. After IntelliJ reopens, follow these steps:
+
+
+STEP 1: Configure Java in Project
+==================================
+Press Ctrl+Alt+Shift+S (opens Project Structure)
+├── Click "Project" in left panel
+├── SDK dropdown: Select your Java 11+ (should appear now!)
+├── Language level: Select "11"
+└── Click Apply & OK
+
+
+STEP 2: Reload Maven to Download Dependencies
+==============================================
+View > Tool Windows > Maven (or click Maven tab on right)
+├── Click the 🔄 Reload button (circular arrows, top-left)
+├── Wait 2-5 minutes for downloads
+└── Watch for "BUILD SUCCESS" message
+
+
+STEP 3: Verify
+==============
+✅ pom.xml - no errors
+✅ GiocatoriRestServlet.java - imports work
+✅ Build > Build Project - succeeds
+
+
+ALTERNATIVE IF YOU DON'T WANT TO RESTART:
+==========================================
+
+You can manually reload Maven in IntelliJ without restarting:
+
+1. File > Settings (Ctrl+Alt+S)
+2. Build, Execution, Deployment > Build Tools > Maven > Runner
+3. Set JRE: Click dropdown and select Java 11+
+   (or click "..." and browse to: C:\Program Files\Eclipse Adoptium\jdk-XX)
+4. Click OK
+5. View > Tool Windows > Maven
+6. Click 🔄 Reload All Maven Projects
+
+This should work even without a restart!
+
+================================================================================
+

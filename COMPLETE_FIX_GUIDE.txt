@@ -1,0 +1,151 @@
+================================================================================
+                    🎯 FINAL STEPS TO FIX ALL ERRORS
+================================================================================
+
+CURRENT STATUS:
+---------------
+✅ Java is installed on your computer
+✅ pom.xml has been optimized with correct dependencies
+⚠️  IntelliJ IDEA hasn't detected Java yet (needs restart or manual config)
+❌ Maven dependencies not downloaded yet (causing all the errors)
+
+
+TO FIX - CHOOSE ONE OPTION:
+============================
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ OPTION A: RESTART INTELLIJ (Easiest - Recommended)                     │
+└─────────────────────────────────────────────────────────────────────────┘
+
+1. Close IntelliJ IDEA completely (File > Exit)
+
+2. Reopen IntelliJ IDEA
+
+3. Press Ctrl+Alt+Shift+S
+   - Project > SDK: Select Java 11+
+   - Click Apply & OK
+
+4. View > Tool Windows > Maven
+   - Click 🔄 Reload All Maven Projects
+   - Wait 2-5 minutes
+
+5. Done! All errors will disappear.
+
+
+┌─────────────────────────────────────────────────────────────────────────┐
+│ OPTION B: MANUAL CONFIGURATION (No restart needed)                     │
+└─────────────────────────────────────────────────────────────────────────┘
+
+1. File > Settings (Ctrl+Alt+S)
+
+2. Go to: Build, Execution, Deployment > Build Tools > Maven > Runner
+
+3. Under "JRE", click the dropdown or "..." button
+   - Select your Java installation
+   - Usually: C:\Program Files\Eclipse Adoptium\jdk-XX.X.X
+   - Or: C:\Program Files\Java\jdk-XX
+
+4. Click Apply, then OK
+
+5. Go to: File > Project Structure (Ctrl+Alt+Shift+S)
+   - Project > SDK: Select same Java
+   - Language level: 11
+   - Click Apply & OK
+
+6. View > Tool Windows > Maven
+   - Click 🔄 Reload All Maven Projects
+   - Wait 2-5 minutes
+
+7. Done! All errors will disappear.
+
+
+WHAT WILL HAPPEN WHEN YOU RELOAD MAVEN:
+========================================
+
+You'll see in the console (Build tab at bottom):
+
+[INFO] ------------------------------------------------------------------------
+[INFO] Building Backend 1.0-SNAPSHOT
+[INFO] ------------------------------------------------------------------------
+Downloading from central: https://repo.maven.apache.org/maven2/...
+Downloaded from central: .../gson-2.8.9.jar (240 KB)
+Downloaded from central: .../jackson-databind-2.13.4.jar (1.5 MB)
+Downloaded from central: .../jackson-core-2.13.4.jar (365 KB)
+Downloaded from central: .../jackson-annotations-2.13.4.jar (75 KB)
+Downloaded from central: .../ojdbc11-21.5.0.0.jar (4.4 MB)
+... and many more dependencies ...
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+
+
+AFTER MAVEN RELOAD - VERIFY:
+=============================
+
+1. ✅ pom.xml
+   - No red underlines
+   - No error markers
+
+2. ✅ GiocatoriRestServlet.java
+   - Line 6: "import com.google.gson.Gson;" is NOT red
+   - No "Cannot resolve symbol 'google'" error
+   - Gson class is recognized
+
+3. ✅ All Java files
+   - All imports resolve correctly
+   - No compilation errors
+
+4. ✅ Build Project (Ctrl+F9)
+   - Builds successfully
+   - "BUILD COMPLETED SUCCESSFULLY" message
+
+
+CURRENT ERRORS THAT WILL BE FIXED:
+===================================
+
+pom.xml:
+  ❌ Dependency 'com.google.code.gson:gson:2.8.9' not found
+  ❌ Dependency 'com.fasterxml.jackson.core:jackson-databind:2.13.4' not found
+  ❌ Plugin 'org.codehaus.mojo:build-helper-maven-plugin:3.3.0' not found
+  → All will be downloaded and resolved ✅
+
+GiocatoriRestServlet.java:
+  ❌ Cannot resolve symbol 'google'
+  → Will be resolved when Gson is downloaded ✅
+
+
+TROUBLESHOOTING:
+================
+
+If Maven reload fails:
+  □ Check internet connection
+  □ Try: File > Invalidate Caches > Invalidate and Restart
+  □ Check Maven settings: File > Settings > Maven > Maven home path
+    → Set to "Bundled (Maven 3.x)"
+  □ Check Event Log (bottom-right) for specific errors
+
+If dependencies still not found after reload:
+  □ Delete folder: C:\Users\FrancescoRanellucci\.m2\repository
+  □ Reload Maven again (it will re-download everything)
+
+
+TIME ESTIMATE:
+==============
+Option A (Restart): ~5 minutes total
+  - Restart IntelliJ: 1 min
+  - Configure SDK: 30 sec
+  - Maven reload: 2-3 min
+  - Verify: 30 sec
+
+Option B (No restart): ~7 minutes total
+  - Configure Maven JRE: 1 min
+  - Configure Project SDK: 1 min
+  - Maven reload: 2-3 min
+  - Verify: 30 sec
+
+
+YOU'RE ALMOST DONE! 🎉
+======================
+Just reload Maven and all your errors will disappear!
+
+================================================================================
+

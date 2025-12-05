@@ -39,6 +39,7 @@ public class SalvaGiocatoreServlet extends HttpServlet {
                 String dataNascita = request.getParameter("DATA_DI_NASCITA");
                 String alias = request.getParameter("ALIAS");
                 String numeroMaglia = request.getParameter("NUMERO_MAGLIA_ABITUALE");
+                String ruoloAbituale = request.getParameter("RUOLO_ABITUALE");
                 String nazioneDiNascita = request.getParameter("NAZIONE_NASCITA");
                 String cittaDiNascita = request.getParameter("CITTA_NASCITA");
                 String idRecParam = request.getParameter("ID_REC");
@@ -61,8 +62,8 @@ public class SalvaGiocatoreServlet extends HttpServlet {
 
                 if (idRecParam == null || idRecParam.trim().isEmpty()) {
                     // INSERT
-                    String insertGiocatore = "INSERT INTO VIEW_GIOCATORI (NOME, COGNOME, DATA_NASCITA, ALIAS, NUMERO_MAGLIA_ABITUALE, NAZIONE_NASCITA, CITTA_NASCITA) " +
-                            "VALUES (?, ?, ?, ?, ?, ?, ?)";
+                    String insertGiocatore = "INSERT INTO VIEW_GIOCATORI (NOME, COGNOME, DATA_NASCITA, ALIAS, NUMERO_MAGLIA_ABITUALE, RUOLO_ABITUALE, NAZIONE_NASCITA, CITTA_NASCITA) " +
+                            "VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
                     PreparedStatement pstmt = connessione.prepareStatement(insertGiocatore);
                     pstmt.setString(1, nome);
                     pstmt.setString(2, cognome);
@@ -73,8 +74,9 @@ public class SalvaGiocatoreServlet extends HttpServlet {
                     } else {
                         pstmt.setNull(5, Types.INTEGER);
                     }
-                    pstmt.setString(6, nazioneDiNascita);
-                    pstmt.setString(7, cittaDiNascita != null ? cittaDiNascita : "");
+                    pstmt.setString(6, ruoloAbituale != null ? ruoloAbituale : "");
+                    pstmt.setString(7, nazioneDiNascita);
+                    pstmt.setString(8, cittaDiNascita != null ? cittaDiNascita : "");
 
                     int results = pstmt.executeUpdate();
                     pstmt.close();
@@ -92,7 +94,7 @@ public class SalvaGiocatoreServlet extends HttpServlet {
                     System.out.println("DEBUG: Aggiornamento giocatore ID: " + idRec);
 
                     String updateGiocatore = "UPDATE VIEW_GIOCATORI SET NOME = ?, COGNOME = ?, DATA_NASCITA = ?, ALIAS = ?, " +
-                            "NUMERO_MAGLIA_ABITUALE = ?, NAZIONE_NASCITA = ?, CITTA_NASCITA = ? WHERE ID_REC = ?";
+                            "NUMERO_MAGLIA_ABITUALE = ?, RUOLO_ABITUALE = ?, NAZIONE_NASCITA = ?, CITTA_NASCITA = ? WHERE ID_REC = ?";
                     PreparedStatement pstmt = connessione.prepareStatement(updateGiocatore);
                     pstmt.setString(1, nome);
                     pstmt.setString(2, cognome);
@@ -103,9 +105,10 @@ public class SalvaGiocatoreServlet extends HttpServlet {
                     } else {
                         pstmt.setNull(5, Types.INTEGER);
                     }
-                    pstmt.setString(6, nazioneDiNascita);
-                    pstmt.setString(7, cittaDiNascita != null ? cittaDiNascita : "");
-                    pstmt.setInt(8, idRec);
+                    pstmt.setString(6, ruoloAbituale != null ? ruoloAbituale : "");
+                    pstmt.setString(7, nazioneDiNascita);
+                    pstmt.setString(8, cittaDiNascita != null ? cittaDiNascita : "");
+                    pstmt.setInt(9, idRec);
 
                     int results = pstmt.executeUpdate();
                     pstmt.close();

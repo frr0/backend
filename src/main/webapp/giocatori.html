@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Giocatori</title>
+    <link rel="stylesheet" href="css/stile.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Elenco Giocatori</h1>
+        <button id="refreshBtn" onclick="loadGiocatori()">Aggiorna</button>
+
+        <div id="loading" style="display:none;">
+            <p>Caricamento in corso...</p>
+        </div>
+
+        <div id="error" style="display:none; color: red;">
+            <p id="errorMsg"></p>
+        </div>
+
+        <table id="giocatoriTable" border="1" cellpadding="10">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nome</th>
+                    <th>Cognome</th>
+                    <th>Ruolo</th>
+                    <th>Numero Maglia</th>
+                </tr>
+            </thead>
+            <tbody id="giocatoriBody">
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        function loadGiocatori() {
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const table = document.getElementById('giocatoriTable');
+
+            loading.style.display = 'block';
+            error.style.display = 'none';
+
+            fetch('/backend/api/giocatori')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('Errore nella risposta del server');
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const tbody = document.getElementById('giocatoriBody');
+                    tbody.innerHTML = '';
+
+                    if (Array.isArray(data)) {
+                        data.forEach(giocatore => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${giocatore.id || ''}</td>
+                                <td>${giocatore.nome || ''}</td>
+                                <td>${giocatore.cognome || ''}</td>
+                                <td>${giocatore.ruolo || ''}</td>
+                                <td>${giocatore.numeroMaglia || ''}</td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    }
+
+                    loading.style.display = 'none';
+                })
+                .catch(err => {
+                    console.error('Errore:', err);
+                    error.style.display = 'block';
+                    document.getElementById('errorMsg').textContent = 'Errore nel caricamento dei dati: ' + err.message;
+                    loading.style.display = 'none';
+                });
+        }
+
+        // Carica i giocatori al caricamento della pagina
+        window.addEventListener('load', loadGiocatori);
+    </script>
+</body>
+</html>
+

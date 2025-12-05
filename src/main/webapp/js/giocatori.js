@@ -1,5 +1,17 @@
 var selectedRow;
 
+// Utility functions
+function formatDate(date) {
+    var year = date.getFullYear();
+    var month = ('0' + (date.getMonth() + 1)).slice(-2);
+    var day = ('0' + date.getDate()).slice(-2);
+    return year + '-' + month + '-' + day;
+}
+
+function isInt(value) {
+    return !isNaN(value) && parseInt(Number(value)) == value && !isNaN(parseInt(value, 10));
+}
+
 function validateFormGiocatori(fieldDaValidare){
    var form = document.getElementById("formGiocatori");
 
@@ -144,31 +156,68 @@ function validateFormGiocatori(fieldDaValidare){
    return isValid;
 }
 
+function aggiungiOAggiornaGiocatoreSuFile(valori, callback) {
+    var httpReq = new XMLHttpRequest();
+
+    httpReq.onreadystatechange = function () {
+        if (httpReq.readyState === 4) {
+            if (httpReq.status === 200) {
+                console.info("Giocatore aggiunto o aggiornato con successo");
+                var record = JSON.parse(httpReq.responseText);
+                callback(record);
+            } else {
+                console.error(httpReq.responseText);
+                alert("Errore durante l'aggiornamento o l'inserimento del giocatore");
+            }
+        }
+    }
+
+    httpReq.open("POST", "/backend/api/giocatori");
+    httpReq.setRequestHeader("content-type", "application/json; charset=UTF-8");
+    httpReq.send(JSON.stringify(valori));
+}
+
 function handlerFormGiocatoriSubmitButtonClick(event){
    event.preventDefault();
    if(validateFormGiocatori()){
 
-       document.getElementById("formGiocatori").submit();
+       var valori = {};
 
+       for(var i = 0; i < formGiocatoriFields.length; i++){
+           var fieldIterato = formGiocatoriFields[i];
 
-       // var valori = {};
-       //
-       // for(var i = 0; i < formGiocatoriFields.length; i++){
-       //     var fieldIterato = formGiocatoriFields[i];
-       //
-       //     if(fieldIterato.tagName.toUpperCase() === "SELECT"){
-       //         valori[fieldIterato.name] = fieldIterato.options[fieldIterato.selectedIndex].innerText;
-       //     } else if(fieldIterato.type === "date") {
-       //         var dateValue = fieldIterato.valueAsDate;
-       //         if (dateValue) {
-       //             valori[fieldIterato.name] = formatDate(dateValue);
-       //         } else {
-       //             valori[fieldIterato.name] = "";
-       //         }
-       //     } else {
-       //         valori[fieldIterato.name] = fieldIterato.value;
-       //     }
-       // }
+           if(fieldIterato.tagName.toUpperCase() === "SELECT"){
+               valori[fieldIterato.name] = fieldIterato.options[fieldIterato.selectedIndex].innerText;
+           } else if(fieldIterato.type === "date") {
+               var dateValue = fieldIterato.valueAsDate;
+               if (dateValue) {
+                   valori[fieldIterato.name] = formatDate(dateValue);
+               } else {
+                   valori[fieldIterato.name] = "";
+               }
+           } else {
+               valori[fieldIterato.name] = fieldIterato.value;
+           }
+       }
+
+       // Check if updating or inserting
+       if(valori.ID_REC && valori.ID_REC !== "" && selectedRow){
+           aggiungiOAggiornaGiocatoreSuFile(valori, function(giocatoreAggiornato) {
+               aggiornaRigaTableGiocatori(giocatoreAggiornato);
+               document.getElementById("formGiocatori").reset();
+               selectedRow = null;
+           });
+       } else {
+           // Remove ID_REC for new insertions
+           delete valori.ID_REC;
+           aggiungiOAggiornaGiocatoreSuFile(valori, function(giocatoreAggiunto) {
+               aggiungiRigaTableGiocatori(giocatoreAggiunto);
+               document.getElementById("formGiocatori").reset();
+           });
+       }
+
+       // OLD CODE - Using form submit instead of AJAX:
+       // document.getElementById("formGiocatori").submit();
        //
        // var valoriLowercase = {};
        // for (var key in valori) {
@@ -218,8 +267,10 @@ function aggiungiRigaTableGiocatori(valori){
        var fieldName = headerFieldList[i].getAttribute("data-index");
        var td = document.createElement("td");
        if(fieldName && fieldName !== ""){
-           if(valori.hasOwnProperty(fieldName.toLowerCase()) && valori[fieldName.toLowerCase()] !== null){
-               td.innerHTML = valori[fieldName.toLowerCase()];
+           // Check both uppercase (from server) and lowercase (from form) keys
+           var value = valori[fieldName] || valori[fieldName.toLowerCase()] || "";
+           if(value !== null && value !== undefined && value !== ""){
+               td.innerHTML = value;
            }
        }else{
            var iEl = document.createElement("i");
@@ -306,12 +357,19 @@ function aggiornaRigaTableGiocatori(valori){
    for(var i = 0; i < headerFieldList.length; i++){
        var fieldName = headerFieldList[i].getAttribute("data-index");
        if(fieldName && fieldName !== ""){
-           if(valori.hasOwnProperty(fieldName.toLowerCase()) && valori[fieldName.toLowerCase()] !== null){
-               tDataList[i].innerHTML = valori[fieldName.toLowerCase()];
+           // Check both uppercase (from server) and lowercase (from form) keys
+           var value = valori[fieldName] || valori[fieldName.toLowerCase()] || "";
+           if(value !== null && value !== undefined){
+               tDataList[i].innerHTML = value;
            } else {
                tDataList[i].innerHTML = "";
            }
        }
+   }
+
+   // Clear selection
+   if(tr.classList.contains("selected")){
+       tr.classList.remove("selected");
    }
 }
 
@@ -358,8 +416,8 @@ function ricercaGiocatori(){
 
 // NECESSARIO PER VERSIONE SUCCESSIVA CON FILE JSON:
 function caricaGiocatori() {
-   // prendo il file .json e guardo la risposta
-   fetch('json/giocatori.json')
+   // prendo i dati dal servlet e guardo la risposta
+   fetch('/backend/api/giocatori')
        .then(response => {
            if (!response.ok) {
                throw new Error('Network response was not ok');

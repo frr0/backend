@@ -1,23 +1,54 @@
 package it.zerob.learn.model;
 
+import com.google.gson.annotations.SerializedName;
+
+import java.math.BigDecimal;
 import java.sql.Date;
 
 public class Giocatore {
 
+    @SerializedName("ID_REC")
     private Integer idRec;
+    @SerializedName("ID_PERSONA_FK")
     private Integer idPersonaFK;
+    @SerializedName("DAL")
     private Date dal;
+    @SerializedName("AL")
     private Date al;
+    @SerializedName("ALIAS")
     private String alias;
+    @SerializedName("ID_RUOLO_ABITUALE_FK")
     private Integer idRuoloAbitualeFK;
-    private Integer numeroMagliaAbituale;
+    @SerializedName("NUMERO_MAGLIA_ABITUALE")
+    private BigDecimal numeroMagliaAbituale;
 
+    @SerializedName("RUOLO_ABITUALE")
     private String ruoloAbituale;
+    @SerializedName("NOME")
     private String nome;
+    @SerializedName("COGNOME")
     private String cognome;
+    @SerializedName("DATA_NASCITA")
     private String dataNascita;
+    @SerializedName("NAZIONE_NASCITA")
     private String nazioneNascita;
+    @SerializedName("CITTA_NASCITA")
     private String cittaNascita;
+
+//    private Integer idRec;
+//    private Integer idPersonaFK;
+//    private Date dal;
+//    private Date al;
+//    private String alias;
+//    private Integer idRuoloAbitualeFK;
+//    private Integer numeroMagliaAbituale;
+//
+//    private String ruoloAbituale;
+//    private String nome;
+//    private String cognome;
+//    private String dataNascita;
+//    private String nazioneNascita;
+//    private String cittaNascita;
 
     public String getRuoloAbituale() {
         return ruoloAbituale;
@@ -115,11 +146,11 @@ public class Giocatore {
         this.idRuoloAbitualeFK = idRuoloAbitualeFK;
     }
 
-    public Integer getNumeroMagliaAbituale() {
+    public BigDecimal getNumeroMagliaAbituale() {
         return numeroMagliaAbituale;
     }
 
-    public void setNumeroMagliaAbituale(Integer numeroMagliaAbituale) {
+    public void setNumeroMagliaAbituale(BigDecimal numeroMagliaAbituale) {
         this.numeroMagliaAbituale = numeroMagliaAbituale;
     }
 }
